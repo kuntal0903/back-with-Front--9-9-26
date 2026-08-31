@@ -148,5 +148,18 @@ This document provides the authoritative verification matrix and technical proof
 5. **Hostname Verification Separation:** Hostname mismatch or trust failure does NOT mean TLS is disabled. Connection and certificate observation are recorded separately from hostname verification.
 6. **No Destructive Email Actions:** SMTP observation probes STARTTLS capability without sending emails or authenticating.
 7. **No Origin IP Fabrications:** Publicly observed IPs are tagged as `observed_edge_ip`, leaving `origin_ip` as `"unknown"` unless independently verified.
-8. **No Invented Domain Names:** Domain-dependent scanners (e.g. Email Security) do NOT invent domain names for IP targets if no PTR, TLS SAN, or HTTP redirect hostname evidence exists.
+---
+
+## 11. Deployment & Production REST API Verification Matrix
+
+| Component | Target / URL | Verification Protocol | Expected Output | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Backend Health Probe** | `GET /health` | HTTP GET | `{"status": "healthy", "version": "0.1.0"}` | **VERIFIED** |
+| **API Health Probe** | `GET /api/v1/health` | HTTP GET | `{"status": "healthy", "storage": {...}}` | **VERIFIED** |
+| **CORS Middleware** | Preflight `OPTIONS` | `Access-Control-Allow-Origin: *` | HTTP 200 OK + CORS Headers | **VERIFIED** |
+| **Scan Submission API** | `POST /api/v1/scans` | JSON Body `{"target": "example.com", "mode": "full"}` | `201 Created` with `scan_id` | **VERIFIED** |
+| **Scan Results API** | `GET /api/v1/scans/{id}/results` | HTTP GET | `200 OK` with full `assets`, `relationships`, `evidence` | **VERIFIED** |
+| **Frontend Production Build**| `npm run build` | Vite 6 Build | Zero JSX syntax errors, `dist/index.html` created | **VERIFIED** |
+| **Git Mono-Repo Remote** | `git push -u origin main` | GitHub Repository `ishq.git` | `backend/` and `frontend/` mono-repo structure | **VERIFIED** |
+
 
