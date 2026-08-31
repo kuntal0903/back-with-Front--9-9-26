@@ -1,0 +1,632 @@
+[
+  {
+    "name": "nginx",
+    "category": "web_server",
+    "headers": {
+      "server": "\\bnginx\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "nginx/([0-9\\.]+)"
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Apache",
+    "category": "web_server",
+    "headers": {
+      "server": "\\bapache\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "apache/([0-9\\.]+)"
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Microsoft-IIS",
+    "category": "web_server",
+    "headers": {
+      "server": "\\bmicrosoft-iis\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "microsoft-iis/([0-9\\.]+)"
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "LiteSpeed",
+    "category": "web_server",
+    "headers": {
+      "server": "\\blitespeed\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Caddy",
+    "category": "web_server",
+    "headers": {
+      "server": "\\bcaddy\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Cloudflare",
+    "category": "cdn",
+    "headers": {
+      "server": "^cloudflare$",
+      "cf-ray": ".*",
+      "cf-cache-status": ".*"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [
+      "^__cf_bm$",
+      "^cf_clearance$",
+      "^__cfduid$"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Amazon CloudFront",
+    "category": "cdn",
+    "headers": {
+      "via": "CloudFront",
+      "x-amz-cf-id": ".*",
+      "x-amz-cf-pop": ".*"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Akamai",
+    "category": "cdn",
+    "headers": {
+      "x-akamai-transformed": ".*",
+      "x-akamai-request-id": ".*",
+      "server": "\\bakamai\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [
+      "^ak_bmsc$"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Fastly",
+    "category": "cdn",
+    "headers": {
+      "x-fastly-request-id": ".*",
+      "fastly-restarts": ".*",
+      "via": "fastly"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "high"
+  },
+  {
+    "name": "WordPress",
+    "category": "cms",
+    "headers": {
+      "x-powered-by": "\\bwordpress\\b"
+    },
+    "html_patterns": [
+      "/wp-content/themes/",
+      "/wp-includes/"
+    ],
+    "meta_patterns": {
+      "generator": "^WordPress(?:\\s+([0-9\\.]+))?"
+    },
+    "script_patterns": [
+      "/wp-includes/js/",
+      "/wp-content/plugins/",
+      "wp-emoji-release\\.min\\.js"
+    ],
+    "style_patterns": [
+      "/wp-content/themes/",
+      "/wp-includes/css/"
+    ],
+    "asset_patterns": [
+      "/wp-content/uploads/"
+    ],
+    "cookies": [
+      "^wordpress_",
+      "^wp-settings-"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "<meta name=\"generator\" content=\"WordPress\\s+([0-9\\.]+)\"",
+      "wp-emoji-release\\.min\\.js\\?ver=([0-9\\.]+)"
+    ],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Drupal",
+    "category": "cms",
+    "headers": {
+      "x-generator": "\\bdrupal\\b",
+      "x-drupal-cache": ".*"
+    },
+    "html_patterns": [
+      "/sites/all/themes/",
+      "/sites/default/files/",
+      "/core/assets/vendor/"
+    ],
+    "meta_patterns": {
+      "generator": "^Drupal(?:\\s+([0-9\\.]+))?"
+    },
+    "script_patterns": [
+      "/sites/all/modules/",
+      "/core/misc/drupal\\.js"
+    ],
+    "style_patterns": [
+      "/sites/all/themes/",
+      "/modules/system/system\\.base\\.css"
+    ],
+    "asset_patterns": [
+      "/sites/default/files/"
+    ],
+    "cookies": [
+      "^SESS[a-z0-9]{32}$",
+      "^SSESS[a-z0-9]{32}$"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "<meta name=\"generator\" content=\"Drupal\\s+([0-9\\.]+)\""
+    ],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Joomla",
+    "category": "cms",
+    "headers": {},
+    "html_patterns": [
+      "/media/system/js/",
+      "/templates/system/"
+    ],
+    "meta_patterns": {
+      "generator": "^Joomla!?(?:\\s+([0-9\\.]+))?"
+    },
+    "script_patterns": [
+      "/media/jui/js/",
+      "/media/system/js/core\\.js"
+    ],
+    "style_patterns": [
+      "/templates/[^/]+/css/"
+    ],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "<meta name=\"generator\" content=\"Joomla!?(?:\\s+-?\\s*Open Source Content Management)?(?:\\s+([0-9\\.]+))?\""
+    ],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Elementor",
+    "category": "cms",
+    "headers": {},
+    "html_patterns": [
+      "elementor-element",
+      "elementor-widget"
+    ],
+    "meta_patterns": {
+      "generator": "Elementor"
+    },
+    "script_patterns": [
+      "/wp-content/plugins/elementor/"
+    ],
+    "style_patterns": [
+      "/wp-content/plugins/elementor/"
+    ],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [
+      "data-elementor-type"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [
+      "<meta name=\"generator\" content=\"Elementor\\s+([0-9\\.]+)\""
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "WooCommerce",
+    "category": "cms",
+    "headers": {},
+    "html_patterns": [
+      "woocommerce-page",
+      "woocommerce-checkout"
+    ],
+    "meta_patterns": {
+      "generator": "WooCommerce"
+    },
+    "script_patterns": [
+      "/wp-content/plugins/woocommerce/"
+    ],
+    "style_patterns": [
+      "/wp-content/plugins/woocommerce/"
+    ],
+    "asset_patterns": [],
+    "cookies": [
+      "woocommerce_items_in_cart",
+      "woocommerce_cart_hash"
+    ],
+    "dom_patterns": [
+      "woocommerce"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [
+      "<meta name=\"generator\" content=\"WooCommerce\\s+([0-9\\.]+)\""
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Shopify",
+    "category": "cms",
+    "headers": {},
+    "html_patterns": [
+      "cdn\\.shopify\\.com",
+      "Shopify\\.shop"
+    ],
+    "meta_patterns": {},
+    "script_patterns": [
+      "cdn\\.shopify\\.com/s/files"
+    ],
+    "style_patterns": [
+      "cdn\\.shopify\\.com/s/files"
+    ],
+    "asset_patterns": [],
+    "cookies": [
+      "_shopify_s",
+      "_shopify_y"
+    ],
+    "dom_patterns": [
+      "id=\"Shopify-section-"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Laravel",
+    "category": "framework",
+    "headers": {
+      "x-powered-by": "\\blaravel\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [
+      "laravel_session"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Django",
+    "category": "framework",
+    "headers": {},
+    "html_patterns": [
+      "csrfmiddlewaretoken"
+    ],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [
+      "csrftoken",
+      "messages"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Ruby on Rails",
+    "category": "framework",
+    "headers": {
+      "x-rack-cache": ".*",
+      "x-powered-by": "\\brails\\b"
+    },
+    "html_patterns": [],
+    "meta_patterns": {
+      "csrf-param": "authenticity_token"
+    },
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [
+      "_session_id"
+    ],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Express",
+    "category": "framework",
+    "headers": {
+      "x-powered-by": "^Express$"
+    },
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "React",
+    "category": "frontend_framework",
+    "headers": {},
+    "html_patterns": [
+      "data-reactroot",
+      "data-reactid"
+    ],
+    "meta_patterns": {},
+    "script_patterns": [
+      "react(?:-dom)?(?:\\.[a-z0-9\\-_]+)*\\.js"
+    ],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [
+      "data-reactroot"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Vue.js",
+    "category": "frontend_framework",
+    "headers": {},
+    "html_patterns": [
+      "data-v-[a-z0-9]{8}"
+    ],
+    "meta_patterns": {},
+    "script_patterns": [
+      "vue\\.(?:runtime\\.)?(?:esm\\.)?(?:global\\.)?(?:prod\\.|min\\.)?js"
+    ],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [
+      "data-v-"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [
+      "vue/([0-9\\.]+)"
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Angular",
+    "category": "frontend_framework",
+    "headers": {},
+    "html_patterns": [
+      "ng-version=",
+      "ng-app="
+    ],
+    "meta_patterns": {},
+    "script_patterns": [
+      "angular(?:\\.min)?\\.js",
+      "main\\.[a-z0-9]+\\.js"
+    ],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [
+      "ng-version",
+      "ng-app"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [
+      "ng-version=\"([0-9\\.]+)\""
+    ],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Next.js",
+    "category": "frontend_framework",
+    "headers": {
+      "x-nextjs-cache": ".*",
+      "x-powered-by": "Next\\.js"
+    },
+    "html_patterns": [
+      "__NEXT_DATA__",
+      "/_next/static/"
+    ],
+    "meta_patterns": {
+      "next-head-count": ".*"
+    },
+    "script_patterns": [
+      "/_next/static/"
+    ],
+    "style_patterns": [
+      "/_next/static/css/"
+    ],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [
+      "__NEXT_DATA__"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [
+      "Next\\.js\\s+([0-9\\.]+)"
+    ],
+    "confidence_default": "high"
+  },
+  {
+    "name": "Nuxt.js",
+    "category": "frontend_framework",
+    "headers": {
+      "x-nuxt-cache": ".*"
+    },
+    "html_patterns": [
+      "__NUXT__",
+      "/_nuxt/"
+    ],
+    "meta_patterns": {},
+    "script_patterns": [
+      "/_nuxt/"
+    ],
+    "style_patterns": [
+      "/_nuxt/"
+    ],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [
+      "__NUXT__"
+    ],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "high"
+  },
+  {
+    "name": "jQuery",
+    "category": "js_library",
+    "headers": {},
+    "html_patterns": [
+      "jquery[\\-\\.\b0-9]*\\.js",
+      "jquery[\\-\\.\b0-9]*\\.min\\.js"
+    ],
+    "meta_patterns": {},
+    "script_patterns": [
+      "jquery[\\-\\.\b0-9]*\\.js",
+      "jquery[\\-\\.\b0-9]*\\.min\\.js"
+    ],
+    "style_patterns": [],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "jquery-([0-9\\.]+)(?:\\.min)?\\.js"
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Bootstrap",
+    "category": "frontend_framework",
+    "headers": {},
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [
+      "bootstrap(?:\\.bundle)?(?:\\.min)?\\.js"
+    ],
+    "style_patterns": [
+      "bootstrap(?:\\.grid|\\.reboot)?(?:\\.min)?\\.css"
+    ],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [
+      "bootstrap-([0-9\\.]+)(?:\\.min)?\\.(?:js|css)",
+      "bootstrap/([0-9\\.]+)/"
+    ],
+    "confidence_default": "medium"
+  },
+  {
+    "name": "Tailwind CSS",
+    "category": "frontend_framework",
+    "headers": {},
+    "html_patterns": [],
+    "meta_patterns": {},
+    "script_patterns": [
+      "tailwindcss"
+    ],
+    "style_patterns": [
+      "tailwind(?:\\.min)?\\.css"
+    ],
+    "asset_patterns": [],
+    "cookies": [],
+    "dom_patterns": [],
+    "negative_indicators": [],
+    "version_parsers": [],
+    "confidence_default": "medium"
+  }
+]

@@ -1,0 +1,32 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────
+# Phase 0 stub — no services are required yet.
+# Database and Redis will be added in later phases
+# when storage and caching are needed.
+# ─────────────────────────────────────────────
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # Uncomment when Phase 1+ database integration is added:
+  # db:
+  #   image: postgres:16
+  #   environment:
+  #     POSTGRES_USER: ase_user
+  #     POSTGRES_PASSWORD: changeme
+  #     POSTGRES_DB: attack_surface
+  #   ports:
+  #     - "5432:5432"
+
+  # Uncomment when Phase 1+ Redis integration is added:
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"

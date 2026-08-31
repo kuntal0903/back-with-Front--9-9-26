@@ -1,0 +1,8 @@
+# scripts/
+
+# This directory will hold utility scripts such as:
+# - Database migration helpers
+# - Seed data scripts for development
+# - Deployment helpers
+
+# Placeholder file to keep the directory tracked.

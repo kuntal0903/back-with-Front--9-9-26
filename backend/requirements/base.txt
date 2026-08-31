@@ -1,0 +1,19 @@
+# Core runtime dependencies for the Attack Surface Engineering Platform
+# Python 3.12+ (tested on Python 3.14)
+
+# API Framework
+fastapi>=0.115.5
+
+# ASGI Server
+uvicorn[standard]>=0.32.1
+
+# Data validation and settings
+# Using >=2.11 for Python 3.14 pre-built wheel availability
+pydantic>=2.11.0
+pydantic-settings>=2.6.1
+
+# Async HTTP client (used by scanners in later phases)
+httpx>=0.28.0
+
+# DNS library (used by DNS scanner in Phase 3)
+dnspython>=2.7.0
