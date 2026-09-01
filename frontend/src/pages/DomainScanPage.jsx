@@ -319,10 +319,17 @@ export default function DomainScanPage({ onOpenModal }) {
             onChange={(e) => setScanType(e.target.value)}
             disabled={isScanning}
           >
-            <option value="full">Full Attack Surface Recon</option>
-            <option value="subdomains">Subdomain Enumeration Only</option>
-            <option value="dns">DNS & Email Security Audit</option>
-            <option value="ssl">SSL/TLS & Certificate Analysis</option>
+            <option value="dns">1. DNS Scanner</option>
+            <option value="port">2. Port Discovery</option>
+            <option value="service">3. Service Identification</option>
+            <option value="http">4. HTTP / HTTPS Scan</option>
+            <option value="tech">5. Technology Detection</option>
+            <option value="endpoint">6. Endpoint Discovery</option>
+            <option value="js">7. JavaScript Discovery</option>
+            <option value="tls">8. TLS / Certificate Scan</option>
+            <option value="email">9. Email Security Scan</option>
+            <option value="cloud">10. Cloud / CDN Detection</option>
+            <option value="full">11. All Scanners Together (Full Scan)</option>
           </select>
 
           <button

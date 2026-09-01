@@ -25,9 +25,44 @@ export async function checkHealth() {
  * Submit scan target to backend
  */
 export async function submitScan(target, mode = 'full', scans = []) {
-  const payload = { target, mode };
-  if (mode === 'selected' || (scans && scans.length > 0)) {
-    payload.scans = scans;
+  let requestMode = 'full';
+  let requestScans = [];
+
+  const TOOL_MAP = {
+    'dns': 'dns_scan',
+    'dns_scan': 'dns_scan',
+    'port': 'port_discovery',
+    'port_discovery': 'port_discovery',
+    'service': 'service_identification',
+    'service_identification': 'service_identification',
+    'http': 'http_scan',
+    'http_scan': 'http_scan',
+    'tech': 'technology_detection',
+    'technology_detection': 'technology_detection',
+    'endpoint': 'endpoint_discovery',
+    'endpoint_discovery': 'endpoint_discovery',
+    'js': 'javascript_discovery',
+    'javascript_discovery': 'javascript_discovery',
+    'tls': 'tls_scan',
+    'tls_scan': 'tls_scan',
+    'email': 'email_security',
+    'email_security': 'email_security',
+    'cloud': 'cloud_cdn_detection',
+    'cloud_cdn_detection': 'cloud_cdn_detection',
+  };
+
+  if (mode === 'full' || mode === 'all') {
+    requestMode = 'full';
+    requestScans = [];
+  } else {
+    requestMode = 'selected';
+    const canonicalTool = TOOL_MAP[mode] || mode;
+    requestScans = [canonicalTool];
+  }
+
+  const payload = { target, mode: requestMode };
+  if (requestMode === 'selected' || (requestScans && requestScans.length > 0)) {
+    payload.scans = requestScans;
   }
 
   const res = await fetch(`${API_BASE}/api/v1/scans`, {
