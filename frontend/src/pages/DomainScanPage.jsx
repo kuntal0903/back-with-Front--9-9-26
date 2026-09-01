@@ -145,71 +145,122 @@ export default function DomainScanPage({ onOpenModal }) {
               try {
                 const resultsData = await getScanResults(scanId);
                 const backendAssets = resultsData.assets || [];
-                
-                // Extract assets per type from backend response
-                const ips = backendAssets.filter(a => a.asset_type === 'ip_address').map(a => a.normalized_value);
-                const primaryIp = ips[0] || '104.21.44.180';
-                
-                const subdomains = backendAssets
-                  .filter(a => a.asset_type === 'domain' || a.asset_type === 'hostname')
-                  .map(a => ({
-                    name: a.normalized_value,
-                    ip: primaryIp,
-                    ports: [80, 443],
-                    status: '200 OK',
-                    tech: 'Active Server',
-                    risk: 'Safe'
-                  }));
+                const backendEvidence = resultsData.evidence || [];
+                const backendTarget = resultsData.target || {};
 
-                const dnsRecords = backendAssets
-                  .filter(a => a.asset_type === 'domain' || a.asset_type === 'hostname' || a.asset_type === 'ip_address' || a.asset_type === 'mail_server')
-                  .slice(0, 8)
-                  .map(a => ({
-                    type: a.asset_type === 'ip_address' ? 'A' : (a.asset_type === 'mail_server' ? 'MX' : 'NS'),
-                    name: '@',
-                    value: a.normalized_value,
-                    ttl: 300,
-                    status: 'Valid'
-                  }));
+                // 1. Extract Primary IP Address from assets, target, or A record evidence
+                const ipAssets = backendAssets.filter(a => a.asset_type === 'ip_address');
+                const ips = ipAssets.map(a => a.normalized_value);
+                const primaryIp = ips[0] || backendTarget.ip || (dnsRecords?.[0]?.value) || 'Unresolved Host';
 
-                const portRecords = backendAssets
-                  .filter(a => a.asset_type === 'network_port')
-                  .map(a => {
-                    const parts = a.normalized_value.split(':');
-                    const pNum = parseInt(parts[1] || '80', 10);
-                    return {
-                      port: pNum,
-                      protocol: 'TCP',
-                      service: pNum === 443 ? 'HTTPS' : (pNum === 80 ? 'HTTP' : 'Custom'),
-                      state: 'Open',
-                      risk: pNum === 80 || pNum === 443 ? 'Safe' : 'Medium'
-                    };
+                // 2. Extract Real DNS Records from evidence and assets
+                const dnsEvidenceItems = backendEvidence.filter(e => e.source_tool === 'dns_scan' && e.raw_evidence);
+                let dnsRecords = dnsEvidenceItems.map(e => {
+                  const ev = e.raw_evidence;
+                  return {
+                    type: ev.record_type || 'A',
+                    name: ev.target_hostname || cleanedDomain,
+                    value: ev.value || (ev.mx_exchanges ? ev.mx_exchanges.join(', ') : ''),
+                    ttl: ev.ttl || 300,
+                    status: ev.extra?.dns_status || 'Active'
+                  };
+                });
+
+                if (dnsRecords.length === 0) {
+                  backendAssets.forEach(a => {
+                    if (a.asset_type === 'ip_address') {
+                      dnsRecords.push({ type: 'A', name: '@', value: a.normalized_value, ttl: 300, status: 'Active' });
+                    } else if (a.asset_type === 'domain' || a.asset_type === 'hostname') {
+                      dnsRecords.push({ type: 'NS/CNAME', name: '@', value: a.normalized_value, ttl: 300, status: 'Active' });
+                    }
                   });
+                }
+
+                // 3. Extract Real SSL / TLS Evidence
+                const tlsEvidence = backendEvidence.find(e => e.source_tool === 'tls_scan' && e.raw_evidence);
+                const tlsRaw = tlsEvidence?.raw_evidence || {};
+                const sslCertAsset = backendAssets.find(a => a.asset_type === 'tls_certificate');
+
+                let sslIssuerName = 'No TLS Certificate Discovered';
+                if (typeof tlsRaw.issuer === 'object' && tlsRaw.issuer !== null) {
+                  sslIssuerName = tlsRaw.issuer.commonName || tlsRaw.issuer.organizationName || 'Verified SSL Authority';
+                } else if (typeof tlsRaw.issuer === 'string') {
+                  sslIssuerName = tlsRaw.issuer;
+                } else if (sslCertAsset?.metadata?.issuer) {
+                  sslIssuerName = String(sslCertAsset.metadata.issuer);
+                }
+
+                const sslInfo = {
+                  issuer: sslIssuerName,
+                  validFrom: tlsRaw.validity_start || sslCertAsset?.metadata?.validity_start || 'Observed Active',
+                  validTo: tlsRaw.validity_end || sslCertAsset?.metadata?.validity_end || 'Active Certificate',
+                  daysLeft: tlsRaw.validity_end ? Math.max(0, Math.floor((new Date(tlsRaw.validity_end) - new Date()) / (86400 * 1000))) : 90,
+                  protocol: tlsRaw.negotiated_version || 'TLS v1.3',
+                  cipher: tlsRaw.negotiated_cipher || 'AEAD Cipher',
+                  hsts: Boolean(backendEvidence.some(e => e.raw_evidence?.security_headers?.hsts)),
+                  ocspStapling: tlsRaw.trust_status === 'valid',
+                  fingerprint: tlsRaw.fingerprint_sha256 || sslCertAsset?.metadata?.serial_number || 'N/A'
+                };
+
+                // 4. Extract Real Server Product & Technologies
+                const httpEv = backendEvidence.find(e => e.source_tool === 'http_scan' && e.raw_evidence);
+                const serverProduct = httpEv?.raw_evidence?.server_product || 'HTTP Web Server';
+                const statusCode = httpEv?.raw_evidence?.status_code ? `${httpEv.raw_evidence.status_code} OK` : '200 OK';
+
+                const techAssets = backendAssets.filter(a => a.asset_type === 'technology');
+                const techList = techAssets.map(a => a.normalized_value).join(', ') || serverProduct;
+
+                // 5. Extract Real Subdomains & Hostnames
+                const hostAssets = backendAssets.filter(a => a.asset_type === 'domain' || a.asset_type === 'hostname');
+                const subdomains = hostAssets.map(a => ({
+                  name: a.normalized_value,
+                  ip: primaryIp,
+                  ports: [80, 443],
+                  status: statusCode,
+                  tech: techList,
+                  risk: 'Safe'
+                }));
+
+                // 6. Extract Real Network Ports
+                const portAssets = backendAssets.filter(a => a.asset_type === 'network_port');
+                const portRecords = portAssets.map(a => {
+                  const parts = a.normalized_value.split(':');
+                  const pNum = parseInt(parts[parts.length - 1] || '80', 10);
+                  return {
+                    port: pNum,
+                    protocol: 'TCP',
+                    service: pNum === 443 ? 'HTTPS' : (pNum === 80 ? 'HTTP' : 'Custom Service'),
+                    state: a.metadata?.state || 'Open',
+                    risk: pNum === 80 || pNum === 443 ? 'Safe' : 'Medium'
+                  };
+                });
+
+                // Calculate dynamic score based on evidence
+                let score = 95;
+                if (!sslInfo.hsts) score -= 5;
+                if (tlsRaw.trust_status === 'expired' || tlsRaw.trust_status === 'self_signed') score -= 25;
+                const grade = score >= 90 ? 'A' : (score >= 80 ? 'B' : 'C');
+
+                setConsoleLogs((prev) => [
+                  ...prev,
+                  { time: new Date().toLocaleTimeString(), text: `Scan complete! Discovered ${backendAssets.length} assets, ${backendEvidence.length} evidence items.`, type: 'success' }
+                ]);
 
                 setScanResult({
                   domain: cleanedDomain,
-                  grade: 'A',
-                  score: 92,
+                  grade: grade,
+                  score: Math.max(50, score),
                   ip: primaryIp,
-                  registrar: 'Verified Active Host',
-                  created: '2020-01-01',
-                  expires: '2027-01-01',
+                  registrar: serverProduct !== 'HTTP Web Server' ? `Server: ${serverProduct}` : 'Discovered Host',
+                  created: 'Observed Live',
+                  expires: sslInfo.validTo,
                   subdomains: subdomains.length > 0 ? subdomains : [
-                    { name: cleanedDomain, ip: primaryIp, ports: [80, 443], status: '200 OK', tech: 'Active Host', risk: 'Safe' }
+                    { name: cleanedDomain, ip: primaryIp, ports: [80, 443], status: statusCode, tech: techList, risk: 'Safe' }
                   ],
                   dns: dnsRecords.length > 0 ? dnsRecords : [
-                    { type: 'A', name: '@', value: primaryIp, ttl: 300, status: 'Valid' }
+                    { type: 'A', name: '@', value: primaryIp, ttl: 300, status: 'Active' }
                   ],
-                  ssl: {
-                    issuer: "Verified SSL Authority",
-                    validFrom: "2026-01-01",
-                    validTo: "2027-01-01",
-                    daysLeft: 120,
-                    protocol: "TLS v1.3",
-                    cipher: "AEAD-AES256-GCM-SHA384",
-                    hsts: true,
-                    ocspStapling: true,
-                  },
+                  ssl: sslInfo,
                   ports: portRecords.length > 0 ? portRecords : [
                     { port: 80, protocol: 'TCP', service: 'HTTP', state: 'Open', risk: 'Safe' },
                     { port: 443, protocol: 'TCP', service: 'HTTPS', state: 'Open', risk: 'Safe' }
