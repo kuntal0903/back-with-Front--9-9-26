@@ -35,9 +35,9 @@ orchestrator = ScanOrchestrator()
     ),
     tags=["Scans"],
 )
-async def create_scan(request: ScanRequest, background_tasks: BackgroundTasks) -> ScanCreatedResponse:
+async def create_scan(request: ScanRequest, background_tasks: BackgroundTasks, sync: bool = False) -> ScanCreatedResponse:
     """
-    Submit a scan target and queue background execution.
+    Submit a scan target and queue background execution or await synchronously if sync=True.
     """
     try:
         processor = TargetProcessor()
@@ -62,6 +62,17 @@ async def create_scan(request: ScanRequest, background_tasks: BackgroundTasks) -
             created_at=datetime.now(timezone.utc),
         )
         scan_db.save_scan(scan)
+
+        if sync:
+            await orchestrator.run_scan(scan_id)
+            updated_scan = scan_db.get_scan(scan_id)
+            return ScanCreatedResponse(
+                scan_id=scan_id,
+                status=updated_scan.status if updated_scan else SCAN_STATUS_QUEUED,
+                target=target_info,
+                created_at=scan.created_at,
+                message="Scan executed synchronously and completed.",
+            )
 
         # Trigger background orchestration task
         background_tasks.add_task(orchestrator.run_scan, scan_id)
