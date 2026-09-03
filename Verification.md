@@ -14,6 +14,42 @@ This document provides the authoritative verification matrix and technical proof
 
 ---
 
+## Production Vercel Deployment & Verification Matrix
+
+- **Git Repository**: [`https://github.com/kuntal0903/back-with-Front--9-9-26.git`](https://github.com/kuntal0903/back-with-Front--9-9-26.git)
+- **Frontend Vercel URL**: [`https://frontend-one-mu-61.vercel.app`](https://frontend-one-mu-61.vercel.app)
+- **Backend Vercel URL**: [`https://backend-nine-psi-jfylpksuh6.vercel.app`](https://backend-nine-psi-jfylpksuh6.vercel.app)
+
+| Component / Layer | Local Test | Production Vercel Test | Status | Evidence / Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Frontend Build** | `npm run build` PASS | Vercel Deployment PASS | VERIFIED | Vite 6 SPA compiled cleanly to `/dist` |
+| **Backend Startup** | `pytest` 176/176 PASS | `@vercel/python` PASS | VERIFIED | FastAPI app running on Vercel serverless |
+| **Backend Health** | `GET /health` 200 OK | `GET /health` 200 OK | VERIFIED | `{"status":"healthy","version":"0.1.0"}` |
+| **API Health** | `GET /api/v1/health` 200 OK | `GET /api/v1/health` 200 OK | VERIFIED | `{"status":"healthy","db_status":"healthy"}` |
+| **CORS Preflight** | OPTIONS 200 OK | OPTIONS 200 OK | VERIFIED | `Access-Control-Allow-Origin: https://frontend-one-mu-61.vercel.app` |
+| **API Scan Submission** | POST 201 Created | POST 201 Created | VERIFIED | `{"scan_id":"...","status":"completed"}` |
+| **Scan Results Aggregation** | GET 200 OK | GET 200 OK | VERIFIED | Structured JSON with real evidence |
+| **Invalid Target Handing** | POST 400 Bad Request | POST 400 Bad Request | VERIFIED | `{"status":"failed","error_type":"invalid_target"}` |
+
+---
+
+## Scanner Production Capabilities Matrix
+
+| Scanner | Local | Vercel Serverless | Execution Evidence / Platform Limitation |
+| :--- | :--- | :--- | :--- |
+| **DNS Scanner** | VERIFIED | VERIFIED | Direct A/AAAA/MX/NS/TXT resolution via system resolver |
+| **Port Scanner** | VERIFIED | LIMITED | Lambda outbound firewall restricts raw socket SYN scans on high ports |
+| **Service Scanner** | VERIFIED | LIMITED | Banner grab limited to open HTTP/HTTPS egress ports (80/443) |
+| **HTTP Scanner** | VERIFIED | VERIFIED | Real HTTP GET/HEAD via httpx, title & server header extraction |
+| **Technology Scanner** | VERIFIED | VERIFIED | Regex fingerprinting on HTTP headers and DOM assets |
+| **Endpoint Scanner** | VERIFIED | VERIFIED | Crawls HTML links, forms, robots.txt, sitemap.xml |
+| **JavaScript Scanner** | VERIFIED | VERIFIED | Static analysis on JS files for API routes & URLs |
+| **TLS Scanner** | VERIFIED | VERIFIED | Real TLS 1.3 handshake on 443, extracts DER certs & SANs |
+| **Email Security** | VERIFIED | VERIFIED | Direct MX, SPF mechanisms, DMARC policy evaluation |
+| **Cloud/CDN Scanner** | VERIFIED | VERIFIED | Multi-signal correlation of CNAMEs, headers, and certificates |
+
+---
+
 ## 1. Service Identification Verification Matrix
 
 | Information Category | Probing Method | Receiver | Response Parser | Validator | Technical Evidence | Confidence Level |
