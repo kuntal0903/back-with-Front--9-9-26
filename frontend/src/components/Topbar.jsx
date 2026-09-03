@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useToast } from '../context/ToastContext';
+import { useBackendHealth } from '../hooks/useBackendHealth';
 import { Search, Bell, Sun, Moon, Zap, Menu, ShieldCheck, Activity, Clock } from 'lucide-react';
 
 export default function Topbar({
@@ -15,6 +16,7 @@ export default function Topbar({
 }) {
   const { theme, setTheme } = useTheme();
   const { addToast } = useToast();
+  const health = useBackendHealth(20000, 4000);
   const [is24Hour, setIs24Hour] = useState(false);
   const [timeString, setTimeString] = useState('');
 
@@ -95,8 +97,8 @@ export default function Topbar({
 
         <button
           className="status-indicator-btn clickable-row"
-          onClick={onOpenStatusModal}
-          title="System Health Diagnostics (Click for System Status)"
+          onClick={() => onOpenStatusModal?.(health)}
+          title={`Backend Connection: ${health.status.toUpperCase()} (Click for System Status)`}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -105,16 +107,33 @@ export default function Topbar({
             fontSize: 12,
             fontWeight: 700,
             borderRadius: 20,
-            background: 'rgba(0, 230, 118, 0.12)',
-            color: '#00e676',
-            border: '1px solid rgba(0, 230, 118, 0.35)',
-            boxShadow: '0 0 15px rgba(0, 230, 118, 0.2)',
+            background: health.status === 'connected'
+              ? 'rgba(59, 130, 246, 0.12)'
+              : (health.status === 'disconnected' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(56, 189, 248, 0.12)'),
+            color: health.status === 'connected'
+              ? '#60a5fa'
+              : (health.status === 'disconnected' ? '#f87171' : 'var(--neon-cyan)'),
+            border: health.status === 'connected'
+              ? '1px solid rgba(59, 130, 246, 0.35)'
+              : (health.status === 'disconnected' ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(56, 189, 248, 0.35)'),
+            boxShadow: health.status === 'connected'
+              ? '0 0 15px rgba(59, 130, 246, 0.2)'
+              : (health.status === 'disconnected' ? '0 0 15px rgba(239, 68, 68, 0.2)' : '0 0 15px rgba(56, 189, 248, 0.2)'),
             cursor: 'pointer',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            transition: 'all 0.3s ease'
           }}
         >
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00e676', boxShadow: '0 0 10px #00e676' }} />
-          <span>Operational</span>
+          <span style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: health.status === 'connected' ? '#3b82f6' : (health.status === 'disconnected' ? '#ef4444' : '#38bdf8'),
+            boxShadow: health.status === 'connected' ? '0 0 10px #3b82f6' : (health.status === 'disconnected' ? '0 0 10px #ef4444' : '0 0 10px #38bdf8')
+          }} />
+          <span>
+            {health.status === 'connected' ? 'Operational' : (health.status === 'disconnected' ? 'Backend Offline' : 'Checking...')}
+          </span>
         </button>
 
         <button

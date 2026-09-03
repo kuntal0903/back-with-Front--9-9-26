@@ -7,17 +7,33 @@
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-/**
- * Health check endpoint probe
- */
-export async function checkHealth() {
+export async function checkHealth(timeoutMs = 4000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    const res = await fetch(`${API_BASE}/api/v1/health`);
-    if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
-    return await res.json();
+    const res = await fetch(`${API_BASE}/api/v1/health`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Health check HTTP error ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (data && (data.status === 'healthy' || data.status === 'ok')) {
+      return { status: 'healthy', data };
+    }
+    return { status: 'unhealthy', error: 'Unexpected health response format', data };
   } catch (err) {
-    console.warn('Backend API Health check error:', err);
-    return { status: 'offline', error: err.message };
+    clearTimeout(timeoutId);
+    return {
+      status: 'offline',
+      error: err.name === 'AbortError' ? 'Connection timeout (4s)' : err.message,
+    };
   }
 }
 
