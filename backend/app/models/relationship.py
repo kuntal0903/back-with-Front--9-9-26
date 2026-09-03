@@ -18,6 +18,11 @@ class Relationship(BaseModel):
         ...,
         description="The asset ID of the source asset.",
     )
+    scan_id: str | None = Field(
+        default=None,
+        description="ID of the scan during which this relationship was discovered.",
+    )
+
     relationship_type: str = Field(
         ...,
         description="The type of link (e.g., 'resolves_to', 'exposes', 'serves').",

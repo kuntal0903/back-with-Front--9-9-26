@@ -24,12 +24,13 @@ class AssetManager:
     and updates relationship linkages chronologically.
     """
 
-    def process_scanner_result(self, scanner_result: ScannerResult) -> None:
+    def process_scanner_result(self, scanner_result: ScannerResult, scan_id: str | None = None) -> None:
         """
         Process scan results to extract assets and relationships.
         
         Args:
             scanner_result: A ScannerResult container populated by a scanning tool execution.
+            scan_id: Optional scan ID to isolate findings per scan execution.
         """
         tool_name = scanner_result.tool
         
@@ -46,20 +47,22 @@ class AssetManager:
                     original_value=a_def["value"],
                     source_tool=tool_name,
                     metadata=a_def.get("metadata", {}),
+                    scan_id=scan_id,
                 )
                 
             # 2. Process Relationships
             for r_def in relations_extracted:
                 # Generate source ID
                 src_norm = self.normalize_value(r_def["source_type"], r_def["source_val"])
-                src_id = self.generate_deterministic_id(r_def["source_type"], src_norm)
+                src_id = self.generate_deterministic_id(r_def["source_type"], src_norm, scan_id=scan_id)
                 
                 # Generate target ID
                 tgt_norm = self.normalize_value(r_def["target_type"], r_def["target_val"])
-                tgt_id = self.generate_deterministic_id(r_def["target_type"], tgt_norm)
+                tgt_id = self.generate_deterministic_id(r_def["target_type"], tgt_norm, scan_id=scan_id)
                 
                 relationship = Relationship(
                     source_asset_id=src_id,
+                    scan_id=scan_id,
                     relationship_type=r_def["type"],
                     target_asset_id=tgt_id,
                     source_tool=tool_name,
@@ -73,13 +76,14 @@ class AssetManager:
         original_value: str,
         source_tool: str,
         metadata: dict[str, Any],
+        scan_id: str | None = None,
     ) -> Asset:
         """
         Deduplicate, normalize, and save an asset.
         If it exists, merge metadata and update last_seen timestamp.
         """
         normalized_value = self.normalize_value(asset_type, original_value)
-        asset_id = self.generate_deterministic_id(asset_type, normalized_value)
+        asset_id = self.generate_deterministic_id(asset_type, normalized_value, scan_id=scan_id)
         
         now = datetime.now(timezone.utc)
         existing = asset_db.get_asset(asset_id)
@@ -93,6 +97,7 @@ class AssetManager:
             merged_metadata = {**existing.metadata, **metadata, "sources": sources}
             updated = Asset(
                 asset_id=existing.asset_id,
+                scan_id=scan_id or existing.scan_id,
                 asset_type=existing.asset_type,
                 original_value=existing.original_value,
                 normalized_value=existing.normalized_value,
@@ -109,6 +114,7 @@ class AssetManager:
             initial_metadata = {**metadata, "sources": [source_tool]}
             new_asset = Asset(
                 asset_id=asset_id,
+                scan_id=scan_id,
                 asset_type=asset_type,
                 original_value=original_value,
                 normalized_value=normalized_value,
@@ -120,6 +126,7 @@ class AssetManager:
             )
             asset_db.save_asset(new_asset)
             return new_asset
+
 
     def normalize_value(self, asset_type: str, value: str) -> str:
         """
@@ -176,9 +183,14 @@ class AssetManager:
             
         return cleaned.lower()
 
-    def generate_deterministic_id(self, asset_type: str, normalized_value: str) -> str:
+    def generate_deterministic_id(self, asset_type: str, normalized_value: str, scan_id: str | None = None) -> str:
         """
-        Generate deterministic UUID strings from type and normalized value.
+        Generate deterministic UUID strings from type, normalized value, and scan_id.
+        Including scan_id ensures assets from different scans are isolated even if
+        they share the same type and value.
         """
-        namespace_input = f"{asset_type}:{normalized_value}"
+        if scan_id:
+            namespace_input = f"{scan_id}:{asset_type}:{normalized_value}"
+        else:
+            namespace_input = f"{asset_type}:{normalized_value}"
         return str(uuid.uuid5(uuid.NAMESPACE_DNS, namespace_input))

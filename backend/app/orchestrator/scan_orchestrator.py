@@ -83,6 +83,9 @@ class ScanOrchestrator:
         if not scan:
             return
 
+        # Clear the global asset store to prevent cross-scan data contamination
+        asset_db.clear()
+
         scan.status = SCAN_STATUS_RUNNING
         scan.started_at = datetime.now(timezone.utc)
         scan.progress = 10
@@ -155,7 +158,7 @@ class ScanOrchestrator:
                             # Parse into AssetManager
                             if res.status == SCAN_STATUS_COMPLETED:
                                 try:
-                                    self.asset_manager.process_scanner_result(res)
+                                    self.asset_manager.process_scanner_result(res, scan_id=scan_id)
                                 except Exception as e:
                                     errors.append({
                                         "error_type": "asset_processing_error",
@@ -187,7 +190,7 @@ class ScanOrchestrator:
                                     evidence.append(ev)
                                 if res.status == SCAN_STATUS_COMPLETED:
                                     try:
-                                        self.asset_manager.process_scanner_result(res)
+                                        self.asset_manager.process_scanner_result(res, scan_id=scan_id)
                                     except Exception as e:
                                         errors.append({
                                             "error_type": "asset_processing_error",
@@ -203,8 +206,8 @@ class ScanOrchestrator:
             scan.progress = 95
             scan_db.save_scan(scan)
 
-            assets = asset_db.get_assets()
-            relationships = asset_db.get_relationships()
+            assets = asset_db.get_assets_by_scan_id(scan_id)
+            relationships = asset_db.get_relationships_by_scan_id(scan_id)
 
             # Save aggregated result
             scan.completed_at = datetime.now(timezone.utc)
@@ -284,6 +287,7 @@ class ScanOrchestrator:
                 # Target is IP: only run Email scanner if a legitimate domain context was derived (e.g. PTR or TLS SAN)
                 derived_domain_assets = [
                     a for a in asset_db.get_assets() if a.asset_type in ("domain", "hostname")
+                    and a.scan_id is not None
                 ]
                 for asset in derived_domain_assets:
                     run_key = (tool_name, asset.normalized_value)
@@ -304,7 +308,7 @@ class ScanOrchestrator:
 
             # Cascading run on resolved IP assets from asset_db
             for asset in asset_db.get_assets():
-                if asset.asset_type == "ip_address":
+                if asset.asset_type == "ip_address" and asset.scan_id is not None:
                     run_key = (tool_name, asset.normalized_value)
                     if run_key not in completed_runs:
                         try:
@@ -316,7 +320,7 @@ class ScanOrchestrator:
 
         # 3. Service Identification running on open network port sub-assets or root target fallback
         elif tool_name == TOOL_SERVICE_IDENTIFICATION:
-            port_assets = [a for a in asset_db.get_assets() if a.asset_type == "network_port"]
+            port_assets = [a for a in asset_db.get_assets() if a.asset_type == "network_port" and a.scan_id is not None]
             if port_assets:
                 for asset in port_assets:
                     val = asset.normalized_value
@@ -347,7 +351,7 @@ class ScanOrchestrator:
             
             # Cascading run on discovered network_port sub-assets
             for asset in asset_db.get_assets():
-                if asset.asset_type == "network_port":
+                if asset.asset_type == "network_port" and asset.scan_id is not None:
                     val = asset.normalized_value
                     if ":" in val:
                         host, port_str = val.rsplit(":", 1)
@@ -372,7 +376,7 @@ class ScanOrchestrator:
         elif tool_name in (TOOL_TECHNOLOGY_DETECTION, TOOL_ENDPOINT_DISCOVERY, TOOL_JAVASCRIPT_DISCOVERY):
             # Probe root URL if http_scan has run on target root
             for asset in asset_db.get_assets():
-                if asset.asset_type == "url":
+                if asset.asset_type == "url" and asset.scan_id is not None:
                     val = asset.normalized_value
                     run_key = (tool_name, val)
                     if run_key not in completed_runs:

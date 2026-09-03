@@ -21,6 +21,11 @@ class Asset(BaseModel):
         default_factory=lambda: str(uuid.uuid4()),
         description="Unique identifier for the asset. Typically a UUID or derived from target/type.",
     )
+    scan_id: str | None = Field(
+        default=None,
+        description="ID of the scan during which this asset was processed/discovered.",
+    )
+
     asset_type: str = Field(
         ...,
         description="The type of the asset (e.g., 'domain', 'ip_address', 'network_port').",

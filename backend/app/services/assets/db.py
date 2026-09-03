@@ -41,11 +41,18 @@ class InMemoryAssetDb:
         with self._lock:
             return list(self._assets.values())
 
+    def get_assets_by_scan_id(self, scan_id: str) -> list[Asset]:
+        """
+        Retrieve assets associated with a specific scan ID.
+        """
+        with self._lock:
+            return [a for a in self._assets.values() if a.scan_id == scan_id]
+
     def save_relationship(self, rel: Relationship) -> None:
         """
         Save or update a relationship link.
         """
-        key = f"{rel.source_asset_id}:{rel.relationship_type}:{rel.target_asset_id}"
+        key = f"{rel.scan_id or 'global'}:{rel.source_asset_id}:{rel.relationship_type}:{rel.target_asset_id}"
         with self._lock:
             self._relationships[key] = rel
 
@@ -53,9 +60,11 @@ class InMemoryAssetDb:
         """
         Fetch a relationship by its source, type, and target asset IDs.
         """
-        key = f"{source_id}:{rel_type}:{target_id}"
         with self._lock:
-            return self._relationships.get(key)
+            for r in self._relationships.values():
+                if r.source_asset_id == source_id and r.relationship_type == rel_type and r.target_asset_id == target_id:
+                    return r
+            return None
 
     def get_relationships(self) -> list[Relationship]:
         """
@@ -63,6 +72,14 @@ class InMemoryAssetDb:
         """
         with self._lock:
             return list(self._relationships.values())
+
+    def get_relationships_by_scan_id(self, scan_id: str) -> list[Relationship]:
+        """
+        Retrieve relationships associated with a specific scan ID.
+        """
+        with self._lock:
+            return [r for r in self._relationships.values() if r.scan_id == scan_id]
+
 
     def clear(self) -> None:
         """
