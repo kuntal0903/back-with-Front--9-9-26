@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # ─────────────────────────────────────────────
     api_host: str = Field(default="0.0.0.0", description="API server bind host")
     api_port: int = Field(default=8000, description="API server bind port")
+    allowed_origins: list[str] = Field(
+        default=["*"],
+        description="Allowed CORS origins list or '*' for all"
+    )
 
     # ─────────────────────────────────────────────
     # Scanner defaults
