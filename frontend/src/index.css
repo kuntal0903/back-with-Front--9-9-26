@@ -163,6 +163,12 @@ input, select, textarea, button {
   color: var(--text-primary);
 }
 
+button {
+  background: transparent;
+  border: none;
+  font: inherit;
+}
+
 .mono { font-family: 'JetBrains Mono', monospace; }
 
 @keyframes fadeIn {
