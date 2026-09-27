@@ -40,6 +40,9 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
+  background: transparent;
+  width: 100%;
+  text-align: left;
   cursor: pointer;
   transition: all var(--transition-base);
   border: 1px solid transparent;
