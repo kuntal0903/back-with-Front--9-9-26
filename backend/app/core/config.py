@@ -11,7 +11,8 @@ Usage:
     print(settings.app_env)
 """
 
-from pydantic import Field
+from typing import Any
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -47,6 +48,34 @@ class Settings(BaseSettings):
         default=["*"],
         description="Allowed CORS origins list or '*' for all"
     )
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            if not v or v.strip() == "*":
+                return ["*"]
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, list):
+            return v
+        return ["*"]
+
+    # ─────────────────────────────────────────────
+    # Database (MongoDB)
+    # ─────────────────────────────────────────────
+    mongodb_url: str = Field(
+        default="",
+        description="MongoDB connection string (e.g. mongodb+srv://user:pass@cluster0.e6m50ew.mongodb.net/)"
+    )
+    mongodb_db_name: str = Field(
+        default="asm_shield_db",
+        description="MongoDB database name"
+    )
+    db_storage_type: str = Field(
+        default="in_memory",
+        description="Database storage driver: in_memory | mongodb"
+    )
+
 
     # ─────────────────────────────────────────────
     # Scanner defaults
