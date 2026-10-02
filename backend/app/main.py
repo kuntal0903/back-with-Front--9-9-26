@@ -51,13 +51,19 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         PROJECT_VERSION,
         settings.app_env,
     )
-    await mongo_manager.connect()
+    try:
+        await mongo_manager.connect()
+    except Exception as e:
+        logger.error("MongoDB startup connection error: %s", e)
 
     yield  # Application is running
 
     # ── Shutdown ─────────────────────────────
     logger.info("Application shutting down")
-    await mongo_manager.disconnect()
+    try:
+        await mongo_manager.disconnect()
+    except Exception as e:
+        logger.error("MongoDB shutdown error: %s", e)
 
 
 def create_application() -> FastAPI:
