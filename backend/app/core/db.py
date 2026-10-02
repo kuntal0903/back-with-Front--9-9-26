@@ -29,13 +29,14 @@ class MongoManager:
         """
         Establish connection to MongoDB Atlas / server and ensure database indexes exist.
         """
-        if not settings.mongodb_url:
-            logger.info("MONGODB_URL not configured. Operating in 'in_memory' database mode.")
+        if not settings.mongodb_url or "<" in settings.mongodb_url or ">" in settings.mongodb_url:
+            logger.info("MONGODB_URL missing or contains placeholders. Operating in 'in_memory' mode.")
+            self.is_connected = False
             return
 
         try:
             logger.info("Connecting to MongoDB instance...")
-            kwargs = {
+            kwargs: dict[str, Any] = {
                 "serverSelectionTimeoutMS": 5000,
                 "connectTimeoutMS": 5000,
             }
@@ -58,12 +59,11 @@ class MongoManager:
 
             # Initialize Indexes
             await self.init_indexes()
-        except ServerSelectionTimeoutError as e:
-            logger.warning(f"MongoDB connection timed out: {e}. Falling back to in-memory storage.")
-            self.is_connected = False
         except Exception as e:
-            logger.error(f"Failed to connect to MongoDB: {e}")
+            logger.warning(f"MongoDB connection failed: {e}. Falling back to in-memory storage.")
             self.is_connected = False
+            self.client = None
+            self.db = None
 
     async def init_indexes(self) -> None:
         """
