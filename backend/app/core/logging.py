@@ -47,30 +47,23 @@ def configure_logging() -> None:
     Should be called once at application startup.
     Log level and log format are loaded from environment configuration.
     """
-    log_level = settings.app_log_level.upper()
-
-    numeric_level = getattr(logging, log_level, None)
-    if not isinstance(numeric_level, int):
-        numeric_level = logging.INFO
+    log_level = getattr(logging, settings.app_log_level.upper(), logging.INFO)
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(numeric_level)
+    root_logger.setLevel(log_level)
 
-    # Remove existing handlers to avoid duplicates
-    for handler in list(root_logger.handlers):
-        root_logger.removeHandler(handler)
+    # In serverless environments (e.g. Vercel), do not clear pre-attached cloud handlers
+    if not root_logger.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(log_level)
 
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(numeric_level)
+        if settings.app_log_format.lower() == "json" or settings.is_production:
+            handler.setFormatter(JsonFormatter())
+        else:
+            log_format = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+            handler.setFormatter(logging.Formatter(log_format))
 
-    # Determine formatter based on environment configuration
-    if settings.app_log_format.lower() == "json" or settings.is_production:
-        handler.setFormatter(JsonFormatter())
-    else:
-        log_format = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-        handler.setFormatter(logging.Formatter(log_format))
-
-    root_logger.addHandler(handler)
+        root_logger.addHandler(handler)
 
     # Suppress verbose third-party library logs
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
