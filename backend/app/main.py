@@ -99,6 +99,16 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Root endpoint for base URL checks
+    @application.get("/", tags=["System"])
+    async def root_index():
+        return {
+            "status": "healthy",
+            "message": "Attack Surface Engine API is online",
+            "version": PROJECT_VERSION,
+            "docs_url": "/docs",
+        }
+
     # Root health check endpoint for monitoring probes
     @application.get("/health", tags=["System"])
     async def root_health():
