@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from app.core.config import settings
 from app.core.constants import PROJECT_VERSION
+from app.core.db import mongo_manager
 from app.orchestrator.db import scan_db
 from app.services.assets.db import asset_db
 
@@ -25,8 +26,9 @@ class HealthResponse(BaseModel):
     status: str = Field(description="Overall system readiness status: healthy | degraded | unhealthy")
     version: str = Field(description="Project release version")
     environment: str = Field(description="Runtime environment name")
-    db_status: str = Field(description="In-memory state database status")
-    storage: dict[str, int] = Field(description="Current in-memory asset and scan record counts")
+    db_storage_type: str = Field(description="Active DB storage type")
+    db_status: str = Field(description="Database status")
+    storage: dict[str, int] = Field(description="Current asset and scan record counts")
 
 
 @router.get(
@@ -41,15 +43,21 @@ async def health_check() -> HealthResponse:
     """
     Health & Readiness probe endpoint.
     """
-    # Evaluate internal database availability
     assets_count = len(asset_db.get_assets())
     scans_count = len(scan_db._scans)
+
+    if settings.db_storage_type == "mongodb" and mongo_manager.is_connected:
+        mongo_ping = await mongo_manager.ping()
+        db_stat = mongo_ping.get("status", "healthy")
+    else:
+        db_stat = "healthy"
 
     return HealthResponse(
         status="healthy",
         version=PROJECT_VERSION,
         environment=settings.app_env,
-        db_status="healthy",
+        db_storage_type=settings.db_storage_type,
+        db_status=db_stat,
         storage={
             "assets": assets_count,
             "scans": scans_count,
