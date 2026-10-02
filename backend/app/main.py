@@ -24,6 +24,7 @@ from fastapi.responses import JSONResponse
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.constants import PROJECT_NAME, PROJECT_VERSION, API_PREFIX
+from app.core.db import mongo_manager
 from app.core.exceptions import AttackSurfaceEngineError
 from app.core.logging import configure_logging, get_logger
 
@@ -50,11 +51,13 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         PROJECT_VERSION,
         settings.app_env,
     )
+    await mongo_manager.connect()
 
     yield  # Application is running
 
     # ── Shutdown ─────────────────────────────
     logger.info("Application shutting down")
+    await mongo_manager.disconnect()
 
 
 def create_application() -> FastAPI:
@@ -160,4 +163,3 @@ def create_application() -> FastAPI:
 # Application instance used by uvicorn
 # ─────────────────────────────────────────────
 app = create_application()
-
