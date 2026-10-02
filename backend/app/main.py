@@ -14,6 +14,7 @@ Usage:
     uvicorn app.main:app --reload
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -51,10 +52,8 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         PROJECT_VERSION,
         settings.app_env,
     )
-    try:
-        await mongo_manager.connect()
-    except Exception as e:
-        logger.error("MongoDB startup connection error: %s", e)
+    # Launch MongoDB connection in background task for instant cold starts
+    asyncio.create_task(mongo_manager.connect())
 
     yield  # Application is running
 
