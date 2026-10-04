@@ -53,16 +53,16 @@ export default function DomainScanPage() {
 
         try {
           const statusRes = await getScanStatus(scanId);
-          if (statusRes.status === 'completed' || statusRes.status === 'failed' || attempts > 35) {
+          if (statusRes.status === 'completed' || statusRes.status === 'partial_failure' || statusRes.status === 'failed' || attempts > 35) {
             clearInterval(pollInterval);
             setIsScanning(false);
 
-            if (statusRes.status === 'completed') {
+            if (statusRes.status === 'completed' || statusRes.status === 'partial_failure') {
               setProgress(100);
               addToast(`Scan completed for ${cleanedDomain}`, 'success');
               setConsoleLogs((prev) => [
                 ...prev,
-                { time: new Date().toLocaleTimeString(), text: `Backend scan completed. Fetching results graph...`, type: 'success' }
+                { time: new Date().toLocaleTimeString(), text: `Backend scan completed (${statusRes.status}). Fetching results graph...`, type: 'success' }
               ]);
 
               try {
