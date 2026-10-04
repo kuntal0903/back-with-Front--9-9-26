@@ -37,8 +37,8 @@ class MongoManager:
         try:
             logger.info("Connecting to MongoDB instance...")
             kwargs: dict[str, Any] = {
-                "serverSelectionTimeoutMS": 5000,
-                "connectTimeoutMS": 5000,
+                "serverSelectionTimeoutMS": 2000,
+                "connectTimeoutMS": 2000,
             }
             try:
                 import certifi
