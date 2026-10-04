@@ -41,9 +41,6 @@ logger = get_logger(__name__)
 async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     """
     FastAPI lifespan context manager.
-
-    Code before the `yield` runs on startup.
-    Code after the `yield` runs on shutdown.
     """
     # ── Startup ──────────────────────────────
     logger.info(
@@ -52,17 +49,11 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         PROJECT_VERSION,
         settings.app_env,
     )
-    # Launch MongoDB connection in background task for instant cold starts
-    asyncio.create_task(mongo_manager.connect())
 
     yield  # Application is running
 
     # ── Shutdown ─────────────────────────────
     logger.info("Application shutting down")
-    try:
-        await mongo_manager.disconnect()
-    except Exception as e:
-        logger.error("MongoDB shutdown error: %s", e)
 
 
 def create_application() -> FastAPI:
